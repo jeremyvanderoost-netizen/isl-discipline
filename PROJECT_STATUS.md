@@ -1,8 +1,8 @@
 # État du Projet - Gestion Disciplinaire
 
-**Version** : 0.2.0  
+**Version** : 0.3.0  
 **Date de mise à jour** : 2026-08-31  
-**Statut** : ✓ Classes, élèves et événements disciplinaires implémentés
+**Statut** : ✓ Punitions et alertes traitables implémentées
 
 ## Fonctionnalités Terminées (PARTIE 1)
 
@@ -129,13 +129,50 @@ NOTIFICATION_EMAIL=...
 - ✓ Protection double-clics (loading state)
 - ✓ Responsive design (tablette compatible)
 
-## Travaux Restants (PARTIE 3+)
+## Fonctionnalités Terminées (PARTIE 3)
 
-- [ ] Punitions et alertes
+### Backend - Routes API
+- ✓ POST `/api/punitions` - Crée une retenue
+- ✓ POST `/api/punitions/batch` - Crée plusieurs retenues avec transaction
+- ✓ GET `/api/punitions/student/:studentId` - Liste les retenues
+- ✓ GET `/api/stats/student/:studentId` - Statistiques (compteur + alerte active)
+- ✓ GET `/api/alerts/student/:studentId` - Liste alertes par élève
+- ✓ GET `/api/alerts/student/:studentId/active` - Alerte active (null si aucune)
+- ✓ PATCH `/api/alerts/:id/resolve` - Traite une alerte
+
+### Backend - Migrations
+- ✓ Migration 3 : Table punitions (date, motif, email tracking)
+- ✓ Migration 4 : Table alerts (statut, résolution, commentaire)
+
+### Backend - Logique d'alertes
+- ✓ Alerte créée automatiquement à punition 3
+- ✓ Alerte créée après levée à punition +3 (6, 9, etc.)
+- ✓ Statut calculé dynamiquement (à venir/passée)
+- ✓ Historique des alertes conservé
+- ✓ Une seule alerte active par élève
+
+### Frontend - Composants
+- ✓ StudentRow - Affiche compteur et badge alerte
+- ✓ AlertDialog - Traite alertes avec confirmation
+- ✓ PunitionActionBar - Ajoute retenues avec date/motif
+- ✓ Chargement stats par élève
+
+### Frontend - Fonctionnalités
+- ✓ Compteur de punitions affichées
+- ✓ Badge orange/rouge pour alertes
+- ✓ Ajout retenues (simple et multiple)
+- ✓ DatePicker pour date/heure retenue
+- ✓ Motif facultatif
+- ✓ Traitement alertes avec commentaire
+- ✓ Protection double-clics (loading)
+- ✓ Messages de succès/erreur
+
+## Travaux Restants (PARTIE 4+)
+
 - [ ] Génération PDF avec PDFKit
 - [ ] Notifications email (Nodemailer)
 - [ ] Tâches planifiées (node-cron)
-- [ ] Historique et statistiques
+- [ ] Interface export données
 - [ ] Tests unitaires
 - [ ] Déploiement
 
