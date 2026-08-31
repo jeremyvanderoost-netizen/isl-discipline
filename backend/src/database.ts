@@ -10,9 +10,18 @@ const DATABASE_PATH = process.env.DATABASE_PATH || path.join(__dirname, '..', 'd
 
 let db: any = null;
 
-async function initializeDatabase() {
-  if (db) return db;
+async function initializeDatabase(force = false) {
+  if (db && !force) return db;
 
+  if (db && force) {
+    try {
+      await db.close();
+    } catch (_err) {
+      // ignore
+    }
+  }
+
+  db = null; // Reset db before opening
   db = await open({
     filename: DATABASE_PATH,
     driver: sqlite3.Database
@@ -44,12 +53,41 @@ async function runMigrations() {
     {
       version: 1,
       sql: `
-        CREATE TABLE IF NOT EXISTS students (
+        CREATE TABLE IF NOT EXISTS classes (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          class TEXT NOT NULL,
+          name TEXT NOT NULL UNIQUE,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS students (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          first_name TEXT NOT NULL,
+          last_name TEXT NOT NULL,
+          class_id INTEGER NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (class_id) REFERENCES classes (id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX idx_students_class_id ON students(class_id);
+      `
+    },
+    {
+      version: 2,
+      sql: `
+        CREATE TABLE IF NOT EXISTS discipline_events (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          student_id INTEGER NOT NULL,
+          event_type TEXT NOT NULL CHECK (event_type IN ('retard', 'matériel_manquant', 'travail_non_fait')),
+          subcategory TEXT CHECK (subcategory IN ('préparation', 'document_oublié', 'évaluation_non_signée', NULL)),
+          comment TEXT,
+          event_date DATETIME NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX idx_events_student_id ON discipline_events(student_id);
+        CREATE INDEX idx_events_date ON discipline_events(event_date);
       `
     }
   ];

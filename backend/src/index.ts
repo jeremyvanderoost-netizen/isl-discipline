@@ -1,5 +1,8 @@
 import express from 'express';
 import { initializeDatabase } from './database.js';
+import classesRouter from './routes/classes.js';
+import studentsRouter from './routes/students.js';
+import eventsRouter from './routes/events.js';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -14,6 +17,10 @@ app.get('/api/health', (_req, res) => {
     timezone: process.env.APP_TIMEZONE || 'Europe/Brussels'
   });
 });
+
+app.use('/api/classes', classesRouter);
+app.use('/api/students', studentsRouter);
+app.use('/api/events', eventsRouter);
 
 async function startServer() {
   try {

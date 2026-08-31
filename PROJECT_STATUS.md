@@ -1,8 +1,8 @@
 # État du Projet - Gestion Disciplinaire
 
-**Version** : 0.1.0  
+**Version** : 0.2.0  
 **Date de mise à jour** : 2026-08-31  
-**Statut** : ✓ Fondations initialisées
+**Statut** : ✓ Classes, élèves et événements disciplinaires implémentés
 
 ## Fonctionnalités Terminées (PARTIE 1)
 
@@ -48,6 +48,10 @@ npm run dev              # Lance frontend + backend
 npm run dev:backend      # Backend seul (localhost:3000)
 npm run dev:frontend     # Frontend seul (localhost:5173)
 
+# Base de données
+npm run seed             # Crée données de démonstration (si DB vide)
+npm run seed:force       # Réinitialise base de données + données
+
 # Vérifications
 npm run type-check       # TypeScript
 npm run build            # Production build
@@ -59,6 +63,14 @@ npm run test             # Tests (non implémentés)
 | Route | Méthode | Description |
 |-------|---------|-------------|
 | `/api/health` | GET | Contrôle du serveur (status, timezone, timestamp) |
+| `/api/classes` | GET | Liste toutes les classes |
+| `/api/classes` | POST | Crée une classe (body: `{name}`) |
+| `/api/classes/:id` | GET | Récupère une classe par ID |
+| `/api/students/class/:classId` | GET | Liste les élèves d'une classe |
+| `/api/students` | POST | Crée un élève (body: `{first_name, last_name, class_id}`) |
+| `/api/events/student/:studentId` | GET | Liste les événements d'un élève |
+| `/api/events` | POST | Crée un événement (body: `{student_id, event_type, subcategory?, comment?}`) |
+| `/api/events/batch` | POST | Crée plusieurs événements avec transaction (body: `{student_ids[], event_type, subcategory?, comment?}`) |
 
 ## Décisions d'Architecture
 
@@ -81,15 +93,51 @@ SMTP_PASS=...
 NOTIFICATION_EMAIL=...
 ```
 
-## Travaux Restants (PARTIE 2+)
+## Fonctionnalités Terminées (PARTIE 2)
 
-- [ ] Gestion des élèves (CRUD)
-- [ ] Enregistrement des incidents
+### Backend - Routes API
+- ✓ GET `/api/classes` - Liste toutes les classes
+- ✓ GET `/api/classes/:id` - Récupère une classe par ID
+- ✓ POST `/api/classes` - Crée une classe
+- ✓ GET `/api/students/class/:classId` - Liste les élèves d'une classe
+- ✓ POST `/api/students` - Crée un élève
+- ✓ GET `/api/events/student/:studentId` - Liste les événements d'un élève
+- ✓ POST `/api/events` - Crée un événement disciplinaire
+- ✓ POST `/api/events/batch` - Crée plusieurs événements (transaction SQLite)
+
+### Backend - Migrations
+- ✓ Migration 1 : Création tables classes et students
+- ✓ Migration 2 : Création table discipline_events
+
+### Backend - Seed / Démonstration
+- ✓ Commande `npm run seed` - Crée 3 classes et 9 élèves
+- ✓ Commande `npm run seed:force` - Réinitialise la base de données
+
+### Frontend - Composants
+- ✓ ClassList - Écran d'accueil affichant les classes
+- ✓ ClassDetail - Liste responsive des élèves avec sélection
+- ✓ ActionBar - Barre d'actions tactile pour ajouter des événements
+- ✓ useApi hook - Gestion centralisée des appels API
+
+### Frontend - Fonctionnalités
+- ✓ Sélection d'un ou plusieurs élèves
+- ✓ Sélectionner tous / Désélectionner tous
+- ✓ Trois types d'événements : Retard, Matériel, Travail
+- ✓ Sous-catégories pour Travail non fait
+- ✓ Commentaire facultatif
+- ✓ Messages de succès/erreur
+- ✓ Protection double-clics (loading state)
+- ✓ Responsive design (tablette compatible)
+
+## Travaux Restants (PARTIE 3+)
+
+- [ ] Punitions et alertes
 - [ ] Génération PDF avec PDFKit
 - [ ] Notifications email (Nodemailer)
 - [ ] Tâches planifiées (node-cron)
+- [ ] Historique et statistiques
 - [ ] Tests unitaires
-- [ ] Déploiement et documentation complémentaire
+- [ ] Déploiement
 
 ## Tests de Validation (PARTIE 1)
 
