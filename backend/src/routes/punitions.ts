@@ -52,6 +52,35 @@ router.post('/', async (req: Request, res: Response) => {
       [student_id, detention_date, reason || null]
     );
 
+    // Check for alert
+    const punitionCount = await db.get(
+      'SELECT COUNT(*) as count FROM punitions WHERE student_id = ?',
+      [student_id]
+    );
+
+    if (punitionCount.count >= 3) {
+      const activeAlert = await db.get(
+        'SELECT id FROM alerts WHERE student_id = ? AND resolved_at IS NULL',
+        [student_id]
+      );
+
+      if (!activeAlert) {
+        const lastResolvedAlert = await db.get(
+          'SELECT punishment_count_at_trigger FROM alerts WHERE student_id = ? AND resolved_at IS NOT NULL ORDER BY resolved_at DESC LIMIT 1',
+          [student_id]
+        );
+
+        const shouldCreateAlert = !lastResolvedAlert || punitionCount.count >= lastResolvedAlert.punishment_count_at_trigger + 3;
+
+        if (shouldCreateAlert) {
+          await db.run(
+            'INSERT INTO alerts (student_id, punishment_count_at_trigger) VALUES (?, ?)',
+            [student_id, punitionCount.count]
+          );
+        }
+      }
+    }
+
     res.status(201).json({
       id: result.lastID,
       student_id,
