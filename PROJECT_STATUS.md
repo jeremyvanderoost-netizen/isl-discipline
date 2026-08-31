@@ -1,8 +1,8 @@
 # État du Projet - Gestion Disciplinaire
 
-**Version** : 0.3.0  
+**Version** : 0.4.0  
 **Date de mise à jour** : 2026-08-31  
-**Statut** : ✓ Punitions et alertes traitables implémentées
+**Statut** : ✓ Fiche élève et export PDF implémentés
 
 ## Fonctionnalités Terminées (PARTIE 1)
 
@@ -167,14 +167,39 @@ NOTIFICATION_EMAIL=...
 - ✓ Protection double-clics (loading)
 - ✓ Messages de succès/erreur
 
-## Travaux Restants (PARTIE 4+)
+## Fonctionnalités Terminées (PARTIE 4)
 
-- [ ] Génération PDF avec PDFKit
-- [ ] Notifications email (Nodemailer)
-- [ ] Tâches planifiées (node-cron)
-- [ ] Interface export données
-- [ ] Tests unitaires
-- [ ] Déploiement
+### Backend - Routes API
+- ✓ GET `/api/students-detail/:studentId/complete` - Fiche complète d'un élève
+- ✓ GET `/api/export/student/:studentId/pdf` - Génération et téléchargement PDF
+
+### Backend - PDF Export
+- ✓ En-têtes lisibles avec title, date d'export, identité
+- ✓ Total des punitions affiché
+- ✓ Alerte active affichée si présente
+- ✓ Historique chronologique complet (événements + punitions)
+- ✓ Dates au format belge (Europe/Brussels)
+- ✓ Noms de fichier sûrs (sanitisation)
+- ✓ Texte uniquement (pas d'émojis)
+
+### Frontend - Fiche Élève
+- ✓ Clic sur nom élève pour voir la fiche détaillée
+- ✓ Affichage identité, classe, statistiques
+- ✓ Badge alerte active si présente
+- ✓ Historique des alertes traitées
+- ✓ Historique chronologique complet
+- ✓ Bouton "Exporter en PDF" avec téléchargement
+- ✓ Dates au format belge
+- ✓ États vides clairs
+
+## Travaux Restants (PARTIE 5+)
+
+- [ ] Notifications email (Nodemailer) - envoi emails parents
+- [ ] Tâches planifiées (node-cron) - rappels automatiques
+- [ ] Interface export données (CSV, Excel)
+- [ ] Tests unitaires complets
+- [ ] Documentation d'administration
+- [ ] Déploiement en production
 
 ## Tests de Validation (PARTIE 1)
 
