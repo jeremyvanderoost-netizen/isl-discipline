@@ -44,6 +44,39 @@ npm run dev
 - Backend : http://localhost:3000
 - Route de contrôle : http://localhost:3000/api/health
 
+## Configuration Gmail
+
+Pour envoyer des notifications par email, configure Gmail comme suit :
+
+### 1. Activer l'authentification à deux facteurs
+
+1. Accède à https://myaccount.google.com/
+2. Sélectionne "Sécurité" dans le menu gauche
+3. Active l'authentification à deux facteurs
+
+### 2. Créer un mot de passe d'application
+
+1. Reviens à la page "Sécurité"
+2. Sélectionne "Mots de passe d'application"
+3. Sélectionne "Courrier" et "Windows/Mac/Linux"
+4. Google génère un mot de passe de 16 caractères
+
+### 3. Configurer les variables d'environnement
+
+```bash
+# .env
+SMTP_USER=votre-email@gmail.com
+SMTP_PASS=xxxx xxxx xxxx xxxx  # le mot de passe généré par Google
+NOTIFICATION_EMAIL=destinataire@example.com  # email pour recevoir les notifications
+```
+
+### 4. Notes importantes
+
+- **Authentification à deux facteurs** : généralement requise pour utiliser les mots de passe d'application
+- **Limites Gmail** : les limites dépendent de votre compte Google (typiquement 500 emails/jour pour les comptes standard)
+- **Modes de développement** : en mode test (`NODE_ENV=test`), les emails sont envoyés via Ethereal (pas d'email réel)
+- **Sécurité** : ne commite jamais ton mot de passe dans le `.env` - utilise `.env.local` ou des secrets
+
 ## Commandes
 
 | Commande | Description |

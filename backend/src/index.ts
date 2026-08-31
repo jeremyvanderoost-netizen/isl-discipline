@@ -1,5 +1,7 @@
 import express from 'express';
 import { initializeDatabase } from './database.js';
+import { initializeMailer } from './services/notification.js';
+import { startNotificationScheduler } from './services/cron.js';
 import classesRouter from './routes/classes.js';
 import studentsRouter from './routes/students.js';
 import eventsRouter from './routes/events.js';
@@ -36,6 +38,9 @@ async function startServer() {
   try {
     await initializeDatabase();
     console.log('✓ Base de données initialisée');
+
+    await initializeMailer();
+    startNotificationScheduler();
 
     app.listen(PORT, 'localhost', () => {
       console.log(`✓ Serveur lancé sur http://localhost:${PORT}`);
