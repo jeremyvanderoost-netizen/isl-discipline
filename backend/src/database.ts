@@ -89,6 +89,42 @@ async function runMigrations() {
         CREATE INDEX idx_events_student_id ON discipline_events(student_id);
         CREATE INDEX idx_events_date ON discipline_events(event_date);
       `
+    },
+    {
+      version: 3,
+      sql: `
+        CREATE TABLE IF NOT EXISTS punitions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          student_id INTEGER NOT NULL,
+          detention_date DATETIME NOT NULL,
+          reason TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          email_sent_at DATETIME,
+          email_last_error TEXT,
+          email_attempts INTEGER DEFAULT 0,
+          FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX idx_punitions_student_id ON punitions(student_id);
+        CREATE INDEX idx_punitions_date ON punitions(detention_date);
+      `
+    },
+    {
+      version: 4,
+      sql: `
+        CREATE TABLE IF NOT EXISTS alerts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          student_id INTEGER NOT NULL,
+          punishment_count_at_trigger INTEGER NOT NULL,
+          triggered_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          resolved_at DATETIME,
+          resolution_comment TEXT,
+          FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX idx_alerts_student_id ON alerts(student_id);
+        CREATE INDEX idx_alerts_resolved ON alerts(resolved_at);
+      `
     }
   ];
 

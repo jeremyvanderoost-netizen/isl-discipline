@@ -3,6 +3,9 @@ import { initializeDatabase } from './database.js';
 import classesRouter from './routes/classes.js';
 import studentsRouter from './routes/students.js';
 import eventsRouter from './routes/events.js';
+import punitionsRouter from './routes/punitions.js';
+import alertsRouter from './routes/alerts.js';
+import statsRouter from './routes/stats.js';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -21,6 +24,9 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/classes', classesRouter);
 app.use('/api/students', studentsRouter);
 app.use('/api/events', eventsRouter);
+app.use('/api/punitions', punitionsRouter);
+app.use('/api/alerts', alertsRouter);
+app.use('/api/stats', statsRouter);
 
 async function startServer() {
   try {

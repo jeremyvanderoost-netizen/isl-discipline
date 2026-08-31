@@ -49,3 +49,39 @@ export interface CreateDisciplineEventsRequest {
   subcategory?: DisciplineSubcategory;
   comment?: string;
 }
+
+export interface Punition {
+  id: number;
+  student_id: number;
+  detention_date: string;
+  reason: string | null;
+  created_at: string;
+  email_sent_at: string | null;
+  email_last_error: string | null;
+  email_attempts: number;
+}
+
+export interface CreatePunitionRequest {
+  student_id: number;
+  detention_date: string;
+  reason?: string;
+}
+
+export interface CreatePunitionsRequest {
+  student_ids: number[];
+  detention_date: string;
+  reason?: string;
+}
+
+export interface Alert {
+  id: number;
+  student_id: number;
+  punishment_count_at_trigger: number;
+  triggered_at: string;
+  resolved_at: string | null;
+  resolution_comment: string | null;
+}
+
+export interface ResolveAlertRequest {
+  comment?: string;
+}

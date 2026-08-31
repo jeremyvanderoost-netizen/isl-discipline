@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Student } from '../types';
+import { Student, StudentStats, Alert } from '../types';
 import { useApi } from '../hooks/useApi';
 import ActionBar from './ActionBar';
+import PunitionActionBar from './PunitionActionBar';
+import StudentRow from './StudentRow';
+import AlertDialog from './AlertDialog';
 
 interface ClassDetailProps {
   classId: number;
@@ -11,12 +14,34 @@ interface ClassDetailProps {
 
 export default function ClassDetail({ classId, className, onBack }: ClassDetailProps) {
   const { data: students, error: studentsError, loading, request } = useApi<Student[]>();
+  const [studentStats, setStudentStats] = useState<Map<number, StudentStats>>(new Map());
   const [selectedStudents, setSelectedStudents] = useState<Set<number>>(new Set());
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [selectedAlert, setSelectedAlert] = useState<{ alert: Alert; studentId: number; studentName: string } | null>(null);
 
   useEffect(() => {
     request(`/api/students/class/${classId}`, { method: 'GET' });
   }, [classId, request]);
+
+  useEffect(() => {
+    if (!students) return;
+    // Charger les stats pour chaque élève
+    students.forEach(student => {
+      fetch(`/api/stats/student/${student.id}`)
+        .then(r => r.json())
+        .then(stats => {
+          setStudentStats(prev => new Map(prev).set(student.id, stats));
+          // Vérifier si une alerte active existe
+          if (stats.active_alert && !stats.active_alert.resolved_at) {
+            setSelectedAlert({
+              alert: stats.active_alert,
+              studentId: student.id,
+              studentName: `${student.last_name} ${student.first_name}`
+            });
+          }
+        });
+    });
+  }, [students]);
 
   useEffect(() => {
     if (!successMessage) return;
@@ -46,6 +71,30 @@ export default function ClassDetail({ classId, className, onBack }: ClassDetailP
   const handleActionSuccess = (message: string) => {
     setSuccessMessage(message);
     setSelectedStudents(new Set());
+    // Recharger les stats
+    students?.forEach(student => {
+      fetch(`/api/stats/student/${student.id}`)
+        .then(r => r.json())
+        .then(stats => {
+          setStudentStats(prev => new Map(prev).set(student.id, stats));
+        });
+    });
+  };
+
+  const handleResolveAlert = async (comment: string) => {
+    if (!selectedAlert) return;
+    try {
+      const response = await fetch(`/api/alerts/${selectedAlert.alert.id}/resolve`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comment })
+      });
+      if (!response.ok) throw new Error('Erreur');
+      setSelectedAlert(null);
+      handleActionSuccess('✓ Alerte traitée');
+    } catch (error) {
+      alert('Erreur lors du traitement de l\'alerte');
+    }
   };
 
   return (
@@ -97,52 +146,57 @@ export default function ClassDetail({ classId, className, onBack }: ClassDetailP
         )}
 
         {students && students.length > 0 && (
-          <>
-            {/* Student List */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              {/* Header - Select All */}
-              <div className="bg-gray-100 px-4 py-3 border-b border-gray-200 flex items-center">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={students.length > 0 && selectedStudents.size === students.length}
-                    onChange={toggleAllStudents}
-                    className="w-5 h-5 text-indigo-600 cursor-pointer"
-                  />
-                  <span className="font-semibold text-gray-700">Sélectionner tous</span>
-                </label>
-              </div>
-
-              {/* Student rows */}
-              <div className="divide-y divide-gray-200">
-                {students.map(student => (
-                  <label
-                    key={student.id}
-                    className="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedStudents.has(student.id)}
-                      onChange={() => toggleStudent(student.id)}
-                      className="w-5 h-5 text-indigo-600 cursor-pointer"
-                    />
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-800">{student.last_name} {student.first_name}</p>
-                      <p className="text-sm text-gray-600">ID: {student.id}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            {/* Header */}
+            <div className="bg-gray-100 px-4 py-3 border-b border-gray-200 flex items-center">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={students.length > 0 && selectedStudents.size === students.length}
+                  onChange={toggleAllStudents}
+                  className="w-5 h-5 text-indigo-600 cursor-pointer"
+                />
+                <span className="font-semibold text-gray-700">Sélectionner tous</span>
+              </label>
             </div>
-          </>
+
+            {/* Student rows */}
+            <div className="divide-y divide-gray-200">
+              {students.map(student => (
+                <StudentRow
+                  key={student.id}
+                  student={student}
+                  stats={studentStats.get(student.id) || null}
+                  isSelected={selectedStudents.has(student.id)}
+                  onToggle={toggleStudent}
+                />
+              ))}
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Action Bar */}
+      {/* Action Bars */}
       {students && students.length > 0 && (
-        <ActionBar
-          selectedStudentIds={Array.from(selectedStudents)}
-          onSuccess={handleActionSuccess}
+        <>
+          <ActionBar
+            selectedStudentIds={Array.from(selectedStudents)}
+            onSuccess={handleActionSuccess}
+          />
+          <PunitionActionBar
+            selectedStudentIds={Array.from(selectedStudents)}
+            onSuccess={handleActionSuccess}
+          />
+        </>
+      )}
+
+      {/* Alert Dialog */}
+      {selectedAlert && (
+        <AlertDialog
+          alert={selectedAlert.alert}
+          studentName={selectedAlert.studentName}
+          onResolve={handleResolveAlert}
+          onClose={() => setSelectedAlert(null)}
         />
       )}
     </div>
