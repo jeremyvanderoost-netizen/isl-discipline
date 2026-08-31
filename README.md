@@ -1,40 +1,45 @@
 # Gestion Disciplinaire
 
-Application locale de gestion disciplinaire pour enseignants. Permet de consigner les incidents disciplinaires, générer des rapports PDF et envoyer des notifications par email.
+Application locale de gestion disciplinaire pour enseignants. Consigne les incidents, gère les punitions, génère des rapports PDF, envoie des notifications parents et maintient automatiquement des sauvegardes.
 
-## Architecture
+## Prérequis
 
-- **Frontend** : React 18 + Vite + TypeScript + Tailwind CSS
-- **Backend** : Express + TypeScript + SQLite
-- **Base de données** : SQLite 3
-- **Génération PDF** : PDFKit
-- **Email** : Nodemailer (SMTP Gmail)
-- **Tâches planifiées** : node-cron
-
-L'application fonctionne en local sur `localhost`.
+- **Node.js** : version 18 ou supérieure
+- **npm** : version 9 ou supérieure
+- **Gmail** (optionnel) : pour les notifications par email
 
 ## Installation
 
+### 1. Cloner et installer
+
 ```bash
+git clone <repo>
+cd gestion-disciplinaire
 npm install
 ```
 
-Crée un fichier `.env` à partir de `.env.example` :
+### 2. Configurer l'environnement
 
 ```bash
 cp .env.example .env
 ```
 
 Édite `.env` avec tes paramètres :
-- `PORT` : port du backend (défaut : 3000)
-- `DATABASE_PATH` : chemin SQLite (défaut : `./backend/data/app.db`)
-- `APP_TIMEZONE` : fuseau horaire (défaut : Europe/Brussels)
-- `SMTP_USER` / `SMTP_PASS` : credentials Gmail pour notifications
-- `NOTIFICATION_EMAIL` : adresse pour recevoir les notifications
+
+```env
+PORT=3000
+DATABASE_PATH=./backend/data/app.db
+APP_TIMEZONE=Europe/Brussels
+
+# Gmail (optionnel pour notifications)
+SMTP_USER=votre-email@gmail.com
+SMTP_PASS=xxxx xxxx xxxx xxxx
+NOTIFICATION_EMAIL=destinataire@example.com
+```
 
 ## Démarrage
 
-Démarre le frontend et le backend simultanément :
+### Mode développement (frontend + backend)
 
 ```bash
 npm run dev
@@ -42,11 +47,18 @@ npm run dev
 
 - Frontend : http://localhost:5173
 - Backend : http://localhost:3000
-- Route de contrôle : http://localhost:3000/api/health
+- Santé API : http://localhost:3000/api/health
 
-## Configuration Gmail
+### Mode production
 
-Pour envoyer des notifications par email, configure Gmail comme suit :
+```bash
+npm run build
+npm run start
+```
+
+## Configuration Gmail (notifications)
+
+Pour activer les notifications par email aux parents :
 
 ### 1. Activer l'authentification à deux facteurs
 
@@ -56,70 +68,186 @@ Pour envoyer des notifications par email, configure Gmail comme suit :
 
 ### 2. Créer un mot de passe d'application
 
-1. Reviens à la page "Sécurité"
+1. Reviens à "Sécurité"
 2. Sélectionne "Mots de passe d'application"
-3. Sélectionne "Courrier" et "Windows/Mac/Linux"
+3. Choisis "Courrier" et "Windows/Mac/Linux"
 4. Google génère un mot de passe de 16 caractères
+5. Copie-le dans `.env` → `SMTP_PASS`
 
-### 3. Configurer les variables d'environnement
+### Notes Gmail
+
+- **Authentification requise** : 2FA obligatoire pour les mots de passe d'application
+- **Limites** : ~500 emails/jour selon le compte
+- **Mode test** : `NODE_ENV=test` utilise Ethereal (pas de vrai email)
+- **Sécurité** : ne commite jamais `.env` avec les credentials réels
+
+## Charger les données de démo
+
+L'application crée automatiquement la base de données au premier lancement. Pour charger des données de test :
 
 ```bash
-# .env
-SMTP_USER=votre-email@gmail.com
-SMTP_PASS=xxxx xxxx xxxx xxxx  # le mot de passe généré par Google
-NOTIFICATION_EMAIL=destinataire@example.com  # email pour recevoir les notifications
+# Depuis le dossier backend
+npm run seed
 ```
 
-### 4. Notes importantes
+Cela crée :
+- 3 classes (6e A, 6e B, 6e C)
+- 10 élèves par classe
+- Quelques incidents et retenues de démo
 
-- **Authentification à deux facteurs** : généralement requise pour utiliser les mots de passe d'application
-- **Limites Gmail** : les limites dépendent de votre compte Google (typiquement 500 emails/jour pour les comptes standard)
-- **Modes de développement** : en mode test (`NODE_ENV=test`), les emails sont envoyés via Ethereal (pas d'email réel)
-- **Sécurité** : ne commite jamais ton mot de passe dans le `.env` - utilise `.env.local` ou des secrets
+## Sauvegarde et restauration
 
-## Commandes
+### Localisation des données
 
-| Commande | Description |
-|----------|-------------|
-| `npm run dev` | Démarre frontend + backend |
-| `npm run build` | Construit frontend + backend |
-| `npm run type-check` | Vérifie les types TypeScript |
-| `npm run test` | Exécute les tests |
+- **Base de données** : `./backend/data/app.db`
+- **Sauvegardes** : `./backups/` (créées automatiquement au démarrage)
+- **Historique** : jusqu'à 15 dernières sauvegardes conservées
 
-## Structure des dossiers
+### Sauvegarde manuelle
+
+Les sauvegardes sont créées automatiquement avant chaque démarrage du serveur. Elles sont horodatées : `app_2024-08-31_14-30-45.db`
+
+### Restaurer une sauvegarde
+
+1. Arrête le serveur (`Ctrl+C`)
+2. Localise le fichier dans `./backups/`
+3. Remplace `./backend/data/app.db` par la sauvegarde
+4. Redémarre le serveur (`npm run dev`)
+
+Avant restauration, une sauvegarde de l'état actuel est créée : `before_restore_TIMESTAMP.db`
+
+## Fonctionnalités
+
+✅ **Classes et élèves**
+- Créer et gérer des classes
+- Ajouter/modifier/supprimer des élèves
+- Vue d'ensemble des classes
+
+✅ **Incidents disciplinaires**
+- Enregistrer des incidents (dates, raisons)
+- Compteur automatique par élève
+- Alertes parentes à 3, 6, 9+ punitions
+
+✅ **Fiche élève détaillée**
+- Historique complet (incidents, retenues, alertes)
+- Compteur de retenues
+- Export PDF de la fiche
+
+✅ **Alertes parentes**
+- Notification automatique à 3 retenues (1ère alerte)
+- Alertes supplémentaires tous les 3 multiples (6, 9, 12...)
+- Zone de contact direct (téléphone)
+- Historique des alertes résolues
+
+✅ **Notifications par email**
+- Envoi à 10 min après création (via Gmail)
+- Jusqu'à 5 tentatives en cas d'erreur
+- Logs des erreurs
+- Mode test avec Ethereal
+
+✅ **Sauvegardes automatiques**
+- Avant chaque démarrage
+- WAL mode compatible
+- Conservation des 15 dernières
+- Nettoyage automatique
+
+## Commandes Git essentielles
+
+```bash
+# Voir les changements
+git status
+git log --oneline
+
+# Créer un commit
+git add <fichiers>
+git commit -m "description des changements"
+
+# Pousser vers le remote
+git push origin main
+```
+
+## Dépannage
+
+### La base de données est corrompue
+
+Les sauvegardes automatiques te permettent de restaurer l'état précédent (voir section Sauvegarde).
+
+```bash
+# Voir les sauvegardes disponibles
+ls -lah backups/
+
+# Restaurer manuellement
+cp backups/app_2024-08-31_14-30-45.db backend/data/app.db
+```
+
+### Les emails n'arrivent pas
+
+1. Vérifie que `SMTP_USER` et `SMTP_PASS` sont corrects dans `.env`
+2. Vérifie que 2FA est activé sur le compte Gmail
+3. Vérifie que le mot de passe est un "mot de passe d'application" (16 caractères)
+4. Regarde les logs du serveur : `email_last_error` contient le message exact
+5. En mode test : `NODE_ENV=test` les emails vont à Ethereal
+
+### Les alertes ne se créent pas
+
+1. Vérifie qu'il y a bien 3+ retenues pour l'élève
+2. Regarde les logs : une alerte doit être créée
+3. Vérifie que tu es sur la bonne élève (cherche par le nom exact)
+
+### Performance lente
+
+1. Vérifie que la base n'est pas trop grosse : `ls -lh backend/data/app.db`
+2. Pour les tests, utilise des données de démo limitées
+3. Les exports PDF peuvent être lents pour les fiches longues
+
+## Architecture technique
+
+- **Frontend** : React 18 + Vite + TypeScript + Tailwind CSS
+- **Backend** : Express + TypeScript
+- **Base de données** : SQLite 3 (WAL mode)
+- **PDF** : PDFKit
+- **Email** : Nodemailer + Gmail SMTP
+- **Tâches** : node-cron (vérification toutes les minutes)
+
+## Limitations connues
+
+- Application locale uniquement (pas de déploiement réseau)
+- Une instance serveur à la fois (SQLite)
+- Export PDF limité à ~50 pages (PDFKit)
+- Notifications limitées par Google (500/jour)
+
+## Structure du code
 
 ```
 .
-├── backend/              # API Express + SQLite
+├── backend/
 │   ├── src/
-│   │   ├── index.ts      # Point d'entrée serveur
-│   │   ├── database.ts   # Configuration SQLite + migrations
-│   │   └── ...
-│   ├── dist/             # Build compilé
+│   │   ├── index.ts           # Point d'entrée serveur
+│   │   ├── database.ts        # SQLite + migrations
+│   │   ├── services/
+│   │   │   ├── backup.ts      # Sauvegarde automatique
+│   │   │   ├── notification.ts # Gmail
+│   │   │   └── cron.ts        # Planification
+│   │   └── routes/            # API endpoints
 │   └── package.json
-├── frontend/             # App React + Vite
+├── frontend/
 │   ├── src/
-│   │   ├── App.tsx       # Composant racine
-│   │   ├── main.tsx      # Point d'entrée
-│   │   └── index.css     # Styles Tailwind
-│   ├── dist/             # Build produit
+│   │   ├── App.tsx            # Composant racine
+│   │   ├── components/        # React components
+│   │   └── index.css          # Tailwind
 │   └── package.json
-├── .env.example          # Modèle de configuration
-└── package.json          # Root package.json (scripts concurrents)
+├── .env.example               # Modèle config
+└── package.json               # Scripts npm
 ```
 
-## Fonctionnalités (en développement)
+## Sécurité
 
-- [ ] Page d'accueil confirmant la connexion
-- [ ] Gestion des élèves
-- [ ] Enregistrement des incidents disciplinaires
-- [ ] Génération de rapports PDF
-- [ ] Notifications par email
-- [ ] Tâches planifiées
-
-## Notes
-
-- Toutes les timestamps utilisent `Europe/Brussels`
-- La base de données est locale (ne pas commiter `.db`)
-- Les secrets (`.env`, clés Gmail) ne doivent jamais être dans Git
+⚠️ **Important** :
+- Ne commite jamais `.env` avec des credentials
+- Les mots de passe Gmail ne doivent pas être dans Git
 - Exécute `npm run type-check` avant de commiter
+- Utilise `.env.local` pour les secrets
+
+## Support
+
+Pour les issues techniques, consulte les logs du serveur ou vérifie la section Dépannage ci-dessus.
