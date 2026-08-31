@@ -22,5 +22,5 @@ RUN npm run build
 WORKDIR /app/backend
 RUN rm -rf node_modules && npm install --omit=dev
 
-# Lancer le backend
+# Lancer le backend sur 0.0.0.0:3000
 CMD ["npm", "start"]
