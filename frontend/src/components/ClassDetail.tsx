@@ -7,6 +7,7 @@ import StudentRow from './StudentRow';
 import AlertDialog from './AlertDialog';
 import StudentDetail from './StudentDetail';
 import StudentManagement from './StudentManagement';
+import StudentImport from './StudentImport';
 
 type Screen = 'class' | 'student-detail';
 
@@ -160,6 +161,7 @@ export default function ClassDetail({ classId, className, onBack }: ClassDetailP
           {/* Management buttons */}
           <div className="flex gap-2 flex-wrap">
             <StudentManagement classId={classId} className={className} onStudentAdded={handleReloadStudents} />
+            <StudentImport classId={classId} className={className} onImportSuccess={handleReloadStudents} />
           </div>
         </div>
       </div>
