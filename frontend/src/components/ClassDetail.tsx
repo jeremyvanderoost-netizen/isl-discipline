@@ -120,22 +120,22 @@ export default function ClassDetail({ classId, className, onBack }: ClassDetailP
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <button
               onClick={onBack}
-              className="text-indigo-600 hover:text-indigo-800 font-semibold mb-2"
+              className="text-indigo-600 hover:text-indigo-800 font-semibold mb-2 text-base min-h-[44px] inline-flex items-center"
             >
               ← Retour
             </button>
-            <h1 className="text-3xl font-bold text-gray-800">Classe {className}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Classe {className}</h1>
           </div>
           <div className="text-right text-gray-600">
             {students && (
-              <p className="font-semibold">{students.length} élève{students.length > 1 ? 's' : ''}</p>
+              <p className="font-semibold text-sm">{students.length} élève{students.length > 1 ? 's' : ''}</p>
             )}
             {selectedStudents.size > 0 && (
-              <p className="text-indigo-600">{selectedStudents.size} sélectionné{selectedStudents.size > 1 ? 's' : ''}</p>
+              <p className="text-indigo-600 text-sm font-semibold">{selectedStudents.size} sélectionné{selectedStudents.size > 1 ? 's' : ''}</p>
             )}
           </div>
         </div>
@@ -155,7 +155,7 @@ export default function ClassDetail({ classId, className, onBack }: ClassDetailP
       )}
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="px-4 py-4 sm:py-6">
         {loading && (
           <p className="text-center text-gray-600">Chargement des élèves...</p>
         )}

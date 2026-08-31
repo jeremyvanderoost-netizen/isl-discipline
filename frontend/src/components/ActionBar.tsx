@@ -70,50 +70,50 @@ export default function ActionBar({ selectedStudentIds, onSuccess }: ActionBarPr
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="px-4 py-4">
         {!isOpen ? (
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <p className="font-semibold text-gray-800">
+              <p className="font-semibold text-gray-800 text-sm sm:text-base">
                 {selectedStudentIds.length} élève{selectedStudentIds.length > 1 ? 's' : ''} sélectionné{selectedStudentIds.length > 1 ? 's' : ''}
               </p>
             </div>
             <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => { setEventType('retard'); setIsOpen(true); }}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
+                className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold text-xs sm:text-sm min-h-[44px] flex items-center justify-center"
               >
                 ➕ Retard
               </button>
               <button
                 onClick={() => { setEventType('matériel_manquant'); setIsOpen(true); }}
-                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold"
+                className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold text-xs sm:text-sm min-h-[44px] flex items-center justify-center"
               >
                 ➕ Matériel
               </button>
               <button
                 onClick={() => { setEventType('travail_non_fait'); setIsOpen(true); }}
-                className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold"
+                className="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold text-xs sm:text-sm min-h-[44px] flex items-center justify-center"
               >
                 ➕ Travail
               </button>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            <h3 className="font-bold text-lg">Ajouter un événement</h3>
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+            <h3 className="font-bold text-base sm:text-lg">Ajouter un événement</h3>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-xs sm:text-sm">
                 {error}
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-4">
               {/* Event Type Display */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Type d'événement</label>
-                <div className="bg-gray-100 px-3 py-2 rounded border border-gray-300 text-gray-800 font-semibold">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Type</label>
+                <div className="bg-gray-100 px-3 py-2 rounded border border-gray-300 text-gray-800 font-semibold text-sm">
                   {EVENT_TYPES.find(t => t.value === eventType)?.label}
                 </div>
               </div>
@@ -124,7 +124,7 @@ export default function ActionBar({ selectedStudentIds, onSuccess }: ActionBarPr
                 <select
                   value={subcategory || ''}
                   onChange={(e) => setSubcategory((e.target.value || null) as DisciplineSubcategory)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
                 >
                   {SUBCATEGORIES.map(sub => (
                     <option key={String(sub.value)} value={String(sub.value)}>
@@ -135,30 +135,30 @@ export default function ActionBar({ selectedStudentIds, onSuccess }: ActionBarPr
               </div>
 
               {/* Comment */}
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Commentaire (facultatif)</label>
                 <input
                   type="text"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="Détails supplémentaires..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Détails..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
                 />
               </div>
             </div>
 
             {/* Buttons */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-2">
               <button
                 onClick={handleAddEvent}
                 disabled={loading}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center justify-center"
               >
                 {loading ? '⏳ Enregistrement...' : '✓ Valider'}
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors font-semibold"
+                className="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors font-semibold text-sm min-h-[44px] flex items-center justify-center"
               >
                 ✕ Annuler
               </button>
