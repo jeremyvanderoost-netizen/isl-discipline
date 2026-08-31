@@ -1,4 +1,6 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { initializeDatabase } from './database.js';
 import { initializeMailer } from './services/notification.js';
 import { startNotificationScheduler } from './services/cron.js';
@@ -11,6 +13,8 @@ import alertsRouter from './routes/alerts.js';
 import statsRouter from './routes/stats.js';
 import studentsDetailRouter from './routes/students-detail.js';
 import exportPdfRouter from './routes/export-pdf.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -35,6 +39,15 @@ app.use('/api/stats', statsRouter);
 app.use('/api/students-detail', studentsDetailRouter);
 app.use('/api/export', exportPdfRouter);
 
+// Servir le frontend
+const frontendPath = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(frontendPath));
+
+// Fallback pour SPA: servir index.html pour les routes non-API
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
 async function startServer() {
   try {
     await createBackupIfNeeded();
@@ -46,8 +59,8 @@ async function startServer() {
     await initializeMailer();
     startNotificationScheduler();
 
-    app.listen(PORT, 'localhost', () => {
-      console.log(`✓ Serveur lancé sur http://localhost:${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`✓ Serveur lancé sur le port ${PORT}`);
     });
   } catch (error) {
     console.error('✗ Erreur de démarrage:', error);
