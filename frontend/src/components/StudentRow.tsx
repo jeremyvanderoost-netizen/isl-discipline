@@ -5,23 +5,24 @@ interface StudentRowProps {
   stats: StudentStats | null;
   isSelected: boolean;
   onToggle: (studentId: number) => void;
+  onViewDetail?: (studentId: number) => void;
 }
 
-export default function StudentRow({ student, stats, isSelected, onToggle }: StudentRowProps) {
+export default function StudentRow({ student, stats, isSelected, onToggle, onViewDetail }: StudentRowProps) {
   const punishmentCount = stats?.punishment_count || 0;
   const hasActiveAlert = stats?.active_alert && !stats.active_alert.resolved_at;
 
   return (
-    <label className="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors">
+    <div className="flex items-center gap-4 px-4 py-3 hover:bg-indigo-50 transition-colors border-b border-gray-200 last:border-b-0">
       <input
         type="checkbox"
         checked={isSelected}
         onChange={() => onToggle(student.id)}
         className="w-5 h-5 text-indigo-600 cursor-pointer"
       />
-      <div className="flex-1">
+      <div className="flex-1 cursor-pointer" onClick={() => onViewDetail?.(student.id)}>
         <div className="flex items-center gap-2">
-          <p className="font-semibold text-gray-800">
+          <p className="font-semibold text-indigo-600 hover:text-indigo-800">
             {student.last_name} {student.first_name}
           </p>
           {hasActiveAlert && (
@@ -41,6 +42,6 @@ export default function StudentRow({ student, stats, isSelected, onToggle }: Stu
         </div>
         <p className="text-sm text-gray-600">ID: {student.id}</p>
       </div>
-    </label>
+    </div>
   );
 }

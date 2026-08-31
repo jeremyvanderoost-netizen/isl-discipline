@@ -5,6 +5,9 @@ import ActionBar from './ActionBar';
 import PunitionActionBar from './PunitionActionBar';
 import StudentRow from './StudentRow';
 import AlertDialog from './AlertDialog';
+import StudentDetail from './StudentDetail';
+
+type Screen = 'class' | 'student-detail';
 
 interface ClassDetailProps {
   classId: number;
@@ -18,6 +21,8 @@ export default function ClassDetail({ classId, className, onBack }: ClassDetailP
   const [selectedStudents, setSelectedStudents] = useState<Set<number>>(new Set());
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [selectedAlert, setSelectedAlert] = useState<{ alert: Alert; studentId: number; studentName: string } | null>(null);
+  const [screen, setScreen] = useState<Screen>('class');
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
 
   useEffect(() => {
     request(`/api/students/class/${classId}`, { method: 'GET' });
@@ -97,6 +102,20 @@ export default function ClassDetail({ classId, className, onBack }: ClassDetailP
     }
   };
 
+  const handleViewStudent = (studentId: number) => {
+    setSelectedStudentId(studentId);
+    setScreen('student-detail');
+  };
+
+  const handleBackFromDetail = () => {
+    setSelectedStudentId(null);
+    setScreen('class');
+  };
+
+  if (screen === 'student-detail' && selectedStudentId) {
+    return <StudentDetail studentId={selectedStudentId} onBack={handleBackFromDetail} />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -169,6 +188,7 @@ export default function ClassDetail({ classId, className, onBack }: ClassDetailP
                   stats={studentStats.get(student.id) || null}
                   isSelected={selectedStudents.has(student.id)}
                   onToggle={toggleStudent}
+                  onViewDetail={handleViewStudent}
                 />
               ))}
             </div>

@@ -6,6 +6,8 @@ import eventsRouter from './routes/events.js';
 import punitionsRouter from './routes/punitions.js';
 import alertsRouter from './routes/alerts.js';
 import statsRouter from './routes/stats.js';
+import studentsDetailRouter from './routes/students-detail.js';
+import exportPdfRouter from './routes/export-pdf.js';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -27,6 +29,8 @@ app.use('/api/events', eventsRouter);
 app.use('/api/punitions', punitionsRouter);
 app.use('/api/alerts', alertsRouter);
 app.use('/api/stats', statsRouter);
+app.use('/api/students-detail', studentsDetailRouter);
+app.use('/api/export', exportPdfRouter);
 
 async function startServer() {
   try {
