@@ -9,6 +9,8 @@ COPY frontend/package.json frontend/package-lock.json ./frontend/
 
 # Installer toutes les dépendances (y compris devDeps)
 RUN npm install
+RUN cd backend && npm install && cd ..
+RUN cd frontend && npm install && cd ..
 
 # Copier le code source
 COPY . .
@@ -16,9 +18,9 @@ COPY . .
 # Build le backend et frontend
 RUN npm run build
 
-# Installer seulement les prod deps pour le runtime
+# Nettoyer et installer seulement les prod deps pour le runtime
 WORKDIR /app/backend
-RUN npm install --omit=dev
+RUN rm -rf node_modules && npm install --omit=dev
 
 # Lancer le backend
 CMD ["npm", "start"]
