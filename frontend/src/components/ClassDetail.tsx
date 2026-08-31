@@ -6,6 +6,7 @@ import PunitionActionBar from './PunitionActionBar';
 import StudentRow from './StudentRow';
 import AlertDialog from './AlertDialog';
 import StudentDetail from './StudentDetail';
+import StudentManagement from './StudentManagement';
 
 type Screen = 'class' | 'student-detail';
 
@@ -112,6 +113,22 @@ export default function ClassDetail({ classId, className, onBack }: ClassDetailP
     setScreen('class');
   };
 
+  const handleDeleteStudent = async (studentId: number) => {
+    try {
+      const response = await fetch(`/api/students/${studentId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Erreur');
+      handleActionSuccess('✓ Élève supprimé');
+    } catch (error) {
+      alert('Erreur lors de la suppression');
+    }
+  };
+
+  const handleReloadStudents = () => {
+    request(`/api/students/class/${classId}`, { method: 'GET' });
+  };
+
   if (screen === 'student-detail' && selectedStudentId) {
     return <StudentDetail studentId={selectedStudentId} onBack={handleBackFromDetail} />;
   }
@@ -120,23 +137,29 @@ export default function ClassDetail({ classId, className, onBack }: ClassDetailP
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <button
-              onClick={onBack}
-              className="text-indigo-600 hover:text-indigo-800 font-semibold mb-2 text-base min-h-[44px] inline-flex items-center"
-            >
-              ← Retour
-            </button>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Classe {className}</h1>
+        <div className="px-4 py-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <button
+                onClick={onBack}
+                className="text-indigo-600 hover:text-indigo-800 font-semibold mb-2 text-base min-h-[44px] inline-flex items-center"
+              >
+                ← Retour
+              </button>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Classe {className}</h1>
+            </div>
+            <div className="text-right text-gray-600">
+              {students && (
+                <p className="font-semibold text-sm">{students.length} élève{students.length > 1 ? 's' : ''}</p>
+              )}
+              {selectedStudents.size > 0 && (
+                <p className="text-indigo-600 text-sm font-semibold">{selectedStudents.size} sélectionné{selectedStudents.size > 1 ? 's' : ''}</p>
+              )}
+            </div>
           </div>
-          <div className="text-right text-gray-600">
-            {students && (
-              <p className="font-semibold text-sm">{students.length} élève{students.length > 1 ? 's' : ''}</p>
-            )}
-            {selectedStudents.size > 0 && (
-              <p className="text-indigo-600 text-sm font-semibold">{selectedStudents.size} sélectionné{selectedStudents.size > 1 ? 's' : ''}</p>
-            )}
+          {/* Management buttons */}
+          <div className="flex gap-2 flex-wrap">
+            <StudentManagement classId={classId} className={className} onStudentAdded={handleReloadStudents} />
           </div>
         </div>
       </div>
@@ -189,6 +212,7 @@ export default function ClassDetail({ classId, className, onBack }: ClassDetailP
                   isSelected={selectedStudents.has(student.id)}
                   onToggle={toggleStudent}
                   onViewDetail={handleViewStudent}
+                  onDelete={handleDeleteStudent}
                 />
               ))}
             </div>

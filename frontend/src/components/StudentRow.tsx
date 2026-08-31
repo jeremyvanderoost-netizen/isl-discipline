@@ -6,9 +6,10 @@ interface StudentRowProps {
   isSelected: boolean;
   onToggle: (studentId: number) => void;
   onViewDetail?: (studentId: number) => void;
+  onDelete?: (studentId: number) => void;
 }
 
-export default function StudentRow({ student, stats, isSelected, onToggle, onViewDetail }: StudentRowProps) {
+export default function StudentRow({ student, stats, isSelected, onToggle, onViewDetail, onDelete }: StudentRowProps) {
   const punishmentCount = stats?.punishment_count || 0;
   const hasActiveAlert = stats?.active_alert && !stats.active_alert.resolved_at;
 
@@ -42,6 +43,19 @@ export default function StudentRow({ student, stats, isSelected, onToggle, onVie
         </div>
         <p className="text-xs text-gray-600 mt-1">ID: {student.id}</p>
       </div>
+      {onDelete && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (confirm(`Supprimer ${student.last_name} ${student.first_name} ?`)) {
+              onDelete(student.id);
+            }
+          }}
+          className="text-red-600 hover:text-red-800 font-bold text-lg min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+        >
+          ✕
+        </button>
+      )}
     </div>
   );
 }
