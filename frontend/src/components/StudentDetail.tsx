@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApi } from '../hooks/useApi';
+import { DisciplineEventType, DisciplineSubcategory } from '../types';
 
 interface StudentDetailProps {
   studentId: number;
@@ -15,12 +16,80 @@ interface StudentData {
   punitions: any[];
 }
 
+const EVENT_TYPES: { value: DisciplineEventType; label: string; color: string }[] = [
+  { value: 'retard', label: 'Retard', color: 'bg-red-500 hover:bg-red-600' },
+  { value: 'matériel_manquant', label: 'Matériel manquant', color: 'bg-orange-500 hover:bg-orange-600' },
+  { value: 'travail_non_fait', label: 'Travail non fait', color: 'bg-yellow-500 hover:bg-yellow-600' }
+];
+
+const SUBCATEGORIES: { value: DisciplineSubcategory; label: string }[] = [
+  { value: null, label: 'Aucune' },
+  { value: 'préparation', label: 'Préparation à domicile' },
+  { value: 'document_oublié', label: 'Document oublié' },
+  { value: 'évaluation_non_signée', label: 'Évaluation non signée' }
+];
+
 export default function StudentDetail({ studentId, onBack }: StudentDetailProps) {
   const { data: studentData, loading, error, request } = useApi<StudentData>();
+  const [eventType, setEventType] = useState<DisciplineEventType | null>(null);
+  const [subcategory, setSubcategory] = useState<DisciplineSubcategory>(null);
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const submittingRef = useRef(false);
+
+  const loadStudent = () => {
+    request(`/api/students-detail/${studentId}/complete`, { method: 'GET' });
+  };
 
   useEffect(() => {
-    request(`/api/students-detail/${studentId}/complete`, { method: 'GET' });
-  }, [studentId, request]);
+    loadStudent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentId]);
+
+  useEffect(() => {
+    if (!successMessage) return;
+    const timer = setTimeout(() => setSuccessMessage(''), 3000);
+    return () => clearTimeout(timer);
+  }, [successMessage]);
+
+  const handleAddEvent = async () => {
+    if (!eventType) return;
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    setSubmitError('');
+
+    try {
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_id: studentId,
+          event_type: eventType,
+          subcategory: subcategory || undefined,
+          comment: comment || undefined
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Erreur lors de l\'ajout de l\'événement');
+      }
+
+      setSuccessMessage(`✓ ${EVENT_TYPES.find(t => t.value === eventType)?.label} ajouté`);
+      setEventType(null);
+      setSubcategory(null);
+      setComment('');
+      loadStudent();
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Erreur inconnue');
+    } finally {
+      setSubmitting(false);
+      submittingRef.current = false;
+    }
+  };
 
   const handleDownloadPDF = async () => {
     try {
@@ -108,6 +177,88 @@ export default function StudentDetail({ studentId, onBack }: StudentDetailProps)
               </div>
             )}
           </div>
+        </div>
+
+        {/* Ajouter un événement disciplinaire */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Ajouter un événement</h2>
+
+          {successMessage && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded mb-4 font-semibold text-sm">
+              {successMessage}
+            </div>
+          )}
+
+          {!eventType ? (
+            <div className="flex gap-2 flex-wrap">
+              {EVENT_TYPES.map(type => (
+                <button
+                  key={type.value}
+                  onClick={() => setEventType(type.value)}
+                  className={`px-4 py-2 text-white rounded-lg transition-colors font-semibold text-sm min-h-[44px] ${type.color}`}
+                >
+                  ➕ {type.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {submitError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+                  {submitError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Type</label>
+                <div className="bg-gray-100 px-3 py-2 rounded border border-gray-300 text-gray-800 font-semibold text-sm">
+                  {EVENT_TYPES.find(t => t.value === eventType)?.label}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Sous-catégorie</label>
+                <select
+                  value={subcategory || ''}
+                  onChange={(e) => setSubcategory((e.target.value || null) as DisciplineSubcategory)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
+                >
+                  {SUBCATEGORIES.map(sub => (
+                    <option key={String(sub.value)} value={String(sub.value)}>
+                      {sub.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Commentaire (facultatif)</label>
+                <input
+                  type="text"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Détails..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAddEvent}
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold text-sm disabled:opacity-50 min-h-[44px]"
+                >
+                  {submitting ? '⏳ Enregistrement...' : '✓ Valider'}
+                </button>
+                <button
+                  onClick={() => { setEventType(null); setSubmitError(''); }}
+                  className="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors font-semibold text-sm min-h-[44px]"
+                >
+                  ✕ Annuler
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Alertes résolues */}
