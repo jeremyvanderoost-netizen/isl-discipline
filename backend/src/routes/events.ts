@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getDatabase } from '../database.js';
+import { getDatabase, runInTransaction } from '../database.js';
 import { DisciplineEvent, CreateDisciplineEventRequest, CreateDisciplineEventsRequest } from '../types.js';
 
 const router = Router();
@@ -99,10 +99,8 @@ router.post('/batch', async (req: Request, res: Response) => {
       return;
     }
 
-    await db.exec('BEGIN TRANSACTION');
-
-    try {
-      const results = [];
+    const results = await runInTransaction(async () => {
+      const created = [];
       const now = new Date().toISOString();
 
       for (const student_id of student_ids) {
@@ -116,7 +114,7 @@ router.post('/batch', async (req: Request, res: Response) => {
           [student_id, event_type, subcategory || null, comment || null, now]
         );
 
-        results.push({
+        created.push({
           id: result.lastID,
           student_id,
           event_type,
@@ -127,12 +125,10 @@ router.post('/batch', async (req: Request, res: Response) => {
         });
       }
 
-      await db.exec('COMMIT');
-      res.status(201).json(results);
-    } catch (error) {
-      await db.exec('ROLLBACK');
-      throw error;
-    }
+      return created;
+    });
+
+    res.status(201).json(results);
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Erreur lors de la création des événements' });
   }

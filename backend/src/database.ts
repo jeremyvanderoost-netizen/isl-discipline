@@ -145,4 +145,33 @@ export function getDatabase() {
   return db;
 }
 
+// Le driver sqlite3 partage une seule connexion : deux transactions ne peuvent
+// pas être ouvertes en même temps dessus (SQLITE_ERROR: cannot start a
+// transaction within a transaction). On sérialise donc tous les appels
+// transactionnels sur une file d'attente pour garantir qu'une transaction
+// termine (COMMIT ou ROLLBACK) avant que la suivante démarre.
+let transactionQueue: Promise<unknown> = Promise.resolve();
+
+export function runInTransaction<T>(fn: () => Promise<T>): Promise<T> {
+  const run = async (): Promise<T> => {
+    const database = getDatabase();
+    await database.exec('BEGIN TRANSACTION');
+    try {
+      const result = await fn();
+      await database.exec('COMMIT');
+      return result;
+    } catch (error) {
+      await database.exec('ROLLBACK');
+      throw error;
+    }
+  };
+
+  const result = transactionQueue.then(run, run);
+  transactionQueue = result.then(
+    () => undefined,
+    () => undefined
+  );
+  return result;
+}
+
 export { initializeDatabase };

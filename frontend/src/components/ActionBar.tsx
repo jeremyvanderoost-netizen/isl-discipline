@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { DisciplineEventType, DisciplineSubcategory } from '../types';
 
 interface ActionBarProps {
@@ -26,11 +26,17 @@ export default function ActionBar({ selectedStudentIds, onSuccess }: ActionBarPr
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const submittingRef = useRef(false);
 
   const isHidden = selectedStudentIds.length === 0;
 
   const handleAddEvent = async () => {
     if (selectedStudentIds.length === 0) return;
+    // Verrou synchrone : le state React (loading) ne se répercute qu'au
+    // prochain rendu, ce qui laisse une fenêtre où deux clics rapprochés
+    // déclenchent chacun une requête. La ref bloque dès le premier appel.
+    if (submittingRef.current) return;
+    submittingRef.current = true;
 
     setLoading(true);
     setError('');
@@ -61,6 +67,7 @@ export default function ActionBar({ selectedStudentIds, onSuccess }: ActionBarPr
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setLoading(false);
+      submittingRef.current = false;
     }
   };
 
