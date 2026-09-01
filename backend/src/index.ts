@@ -39,10 +39,27 @@ app.use('/api/stats', statsRouter);
 app.use('/api/students-detail', studentsDetailRouter);
 app.use('/api/export', exportPdfRouter);
 
-// Servir le frontend
-const publicPath = path.join(__dirname, 'public');
-console.log('Serving static files from:', publicPath);
+// Servir le frontend - Try multiple paths
+const publicPaths = [
+  path.join(__dirname, 'public'),
+  path.join(__dirname, '..', 'public'),
+  '/app/backend/public',
+  '/app/backend/dist/public'
+];
 
+let publicPath = '';
+for (const p of publicPaths) {
+  if (require('fs').existsSync(path.join(p, 'index.html'))) {
+    publicPath = p;
+    break;
+  }
+}
+
+if (!publicPath) {
+  publicPath = publicPaths[0];
+}
+
+console.log('Serving static files from:', publicPath);
 app.use(express.static(publicPath));
 
 // Fallback pour SPA: servir index.html pour les routes non-API
@@ -51,7 +68,7 @@ app.get('*', (_req, res) => {
   res.sendFile(indexPath, (err) => {
     if (err) {
       console.error(`Failed to serve ${indexPath}:`, err);
-      res.status(404).json({ error: 'Not found' });
+      res.status(404).json({ error: 'Not found', tried: indexPath });
     }
   });
 });
