@@ -3,14 +3,5 @@
   "deploy": {
     "restartPolicyType": "on_failure",
     "restartPolicyMaxRetries": 5
-  },
-  "services": {
-    "backend": {
-      "domains": [
-        {
-          "name": "${{ RAILWAY_PUBLIC_DOMAIN }}"
-        }
-      ]
-    }
   }
 }
