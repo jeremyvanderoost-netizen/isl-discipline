@@ -24,6 +24,12 @@ RUN mkdir -p /app/backend/public && \
       cp -r /app/frontend/dist/* /app/backend/public/; \
     fi
 
+# Copier les fichiers HTML vers le répertoire dist
+RUN mkdir -p /app/backend/dist/public && \
+    if [ -d /app/backend/public ]; then \
+      cp -r /app/backend/public/* /app/backend/dist/public/; \
+    fi
+
 # Nettoyer et installer seulement les prod deps pour le runtime
 WORKDIR /app/backend
 RUN rm -rf node_modules && npm install --omit=dev
