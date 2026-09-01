@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { existsSync } from 'fs';
 import { initializeDatabase } from './database.js';
 import { initializeMailer } from './services/notification.js';
 import { startNotificationScheduler } from './services/cron.js';
@@ -49,7 +50,7 @@ const publicPaths = [
 
 let publicPath = '';
 for (const p of publicPaths) {
-  if (require('fs').existsSync(path.join(p, 'index.html'))) {
+  if (existsSync(path.join(p, 'index.html'))) {
     publicPath = p;
     break;
   }
