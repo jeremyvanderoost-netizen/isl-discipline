@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getDatabase } from '../database.js';
+import { getDatabase, runInTransaction } from '../database.js';
 import { Punition, CreatePunitionRequest, CreatePunitionsRequest } from '../types.js';
 
 const router = Router();
@@ -96,6 +96,56 @@ router.post('/', async (req: Request, res: Response) => {
   }
 });
 
+router.patch('/:id', async (req: Request, res: Response) => {
+  try {
+    const db = getDatabase();
+    const punitionId = parseInt(req.params.id, 10);
+    const { detention_date, reason } = req.body as { detention_date?: string; reason?: string | null };
+
+    const existing = await db.get('SELECT * FROM punitions WHERE id = ?', [punitionId]);
+    if (!existing) {
+      res.status(404).json({ error: 'Punition non trouvée' });
+      return;
+    }
+
+    if (detention_date === undefined && reason === undefined) {
+      res.status(400).json({ error: 'Aucune modification fournie' });
+      return;
+    }
+
+    const newDate = detention_date !== undefined ? detention_date : existing.detention_date;
+    const newReason = reason !== undefined ? reason : existing.reason;
+
+    await db.run(
+      'UPDATE punitions SET detention_date = ?, reason = ? WHERE id = ?',
+      [newDate, newReason, punitionId]
+    );
+
+    const updated = await db.get('SELECT * FROM punitions WHERE id = ?', [punitionId]);
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur lors de la modification de la punition' });
+  }
+});
+
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const db = getDatabase();
+    const punitionId = parseInt(req.params.id, 10);
+
+    const existing = await db.get('SELECT id FROM punitions WHERE id = ?', [punitionId]);
+    if (!existing) {
+      res.status(404).json({ error: 'Punition non trouvée' });
+      return;
+    }
+
+    await db.run('DELETE FROM punitions WHERE id = ?', [punitionId]);
+    res.json({ message: 'Punition annulée avec succès' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur lors de l\'annulation de la punition' });
+  }
+});
+
 router.post('/batch', async (req: Request, res: Response) => {
   try {
     const db = getDatabase();
@@ -106,10 +156,8 @@ router.post('/batch', async (req: Request, res: Response) => {
       return;
     }
 
-    await db.exec('BEGIN TRANSACTION');
-
-    try {
-      const results = [];
+    const results = await runInTransaction(async () => {
+      const created = [];
       const now = new Date().toISOString();
 
       for (const student_id of student_ids) {
@@ -123,7 +171,7 @@ router.post('/batch', async (req: Request, res: Response) => {
           [student_id, detention_date, reason || null]
         );
 
-        results.push({
+        created.push({
           id: result.lastID,
           student_id,
           detention_date,
@@ -165,12 +213,10 @@ router.post('/batch', async (req: Request, res: Response) => {
         }
       }
 
-      await db.exec('COMMIT');
-      res.status(201).json(results);
-    } catch (error) {
-      await db.exec('ROLLBACK');
-      throw error;
-    }
+      return created;
+    });
+
+    res.status(201).json(results);
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Erreur lors de la création des punitions' });
   }

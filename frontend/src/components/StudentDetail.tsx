@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { DisciplineEventType, DisciplineSubcategory } from '../types';
+import EditPunitionDialog from './EditPunitionDialog';
 
 interface StudentDetailProps {
   studentId: number;
@@ -38,6 +39,8 @@ export default function StudentDetail({ studentId, onBack }: StudentDetailProps)
   const [submitError, setSubmitError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const submittingRef = useRef(false);
+  const [editingPunition, setEditingPunition] = useState<{ id: number; detention_date: string; reason: string | null } | null>(null);
+  const cancellingRef = useRef(false);
 
   const loadStudent = () => {
     request(`/api/students-detail/${studentId}/complete`, { method: 'GET' });
@@ -88,6 +91,23 @@ export default function StudentDetail({ studentId, onBack }: StudentDetailProps)
     } finally {
       setSubmitting(false);
       submittingRef.current = false;
+    }
+  };
+
+  const handleCancelPunition = async (punitionId: number) => {
+    if (cancellingRef.current) return;
+    if (!confirm('Annuler cette retenue ? Cette action est définitive.')) return;
+    cancellingRef.current = true;
+
+    try {
+      const response = await fetch(`/api/punitions/${punitionId}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Erreur lors de l\'annulation');
+      setSuccessMessage('✓ Retenue annulée');
+      loadStudent();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erreur lors de l\'annulation');
+    } finally {
+      cancellingRef.current = false;
     }
   };
 
@@ -297,13 +317,16 @@ export default function StudentDetail({ studentId, onBack }: StudentDetailProps)
                   type: 'event' as const,
                   date: new Date(e.event_date),
                   title: `Événement: ${e.event_type}`,
-                  comment: e.comment
+                  comment: e.comment as string | null
                 })),
                 ...punitions.map(p => ({
                   type: 'punition' as const,
+                  id: p.id as number,
                   date: new Date(p.detention_date),
-                  title: `Retenue ${p.reason ? '- ' + p.reason : ''}`,
-                  comment: null
+                  title: `Retenue${p.reason ? ' - ' + p.reason : ''}`,
+                  comment: null as string | null,
+                  detention_date: p.detention_date as string,
+                  reason: (p.reason ?? null) as string | null
                 }))
               ]
                 .sort((a, b) => b.date.getTime() - a.date.getTime())
@@ -316,12 +339,36 @@ export default function StudentDetail({ studentId, onBack }: StudentDetailProps)
                     {item.comment && (
                       <p className="text-sm text-gray-600 italic">"{item.comment}"</p>
                     )}
+                    {item.type === 'punition' && (
+                      <div className="flex gap-3 mt-2">
+                        <button
+                          onClick={() => setEditingPunition({ id: item.id, detention_date: item.detention_date, reason: item.reason })}
+                          className="text-purple-600 hover:text-purple-800 font-semibold text-xs min-h-[32px] flex items-center"
+                        >
+                          ✏️ Modifier
+                        </button>
+                        <button
+                          onClick={() => handleCancelPunition(item.id)}
+                          className="text-red-600 hover:text-red-800 font-semibold text-xs min-h-[32px] flex items-center"
+                        >
+                          🗑️ Annuler
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
             </div>
           )}
         </div>
       </div>
+
+      {editingPunition && (
+        <EditPunitionDialog
+          punition={editingPunition}
+          onClose={() => setEditingPunition(null)}
+          onSaved={() => { setSuccessMessage('✓ Retenue modifiée'); loadStudent(); }}
+        />
+      )}
     </div>
   );
 }
