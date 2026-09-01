@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚖️ ISL - Discipline</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+    h1 {
+      font-size: 48px;
+      margin-bottom: 10px;
+      color: #667eea;
+    }
+    .subtitle {
+      font-size: 24px;
+      color: #555;
+      margin-bottom: 30px;
+    }
+    .status {
+      background: #f0f4ff;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0;
+      justify-content: center;
+    }
+    .check { color: #22c55e; font-weight: bold; }
+    .api-status {
+      background: #dbeafe;
+      border: 2px solid #0ea5e9;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 20px 0;
+      font-family: monospace;
+      font-size: 14px;
+      color: #0369a1;
+      text-align: left;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background 0.3s;
+    }
+    button:hover { background: #764ba2; }
+    .loading { opacity: 0.6; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚖️</h1>
+    <div class="subtitle">ISL - Discipline</div>
+
+    <div class="status">
+      <div class="status-item">
+        <span class="check">✅</span>
+        <span>Application déployée</span>
+      </div>
+      <div class="status-item">
+        <span class="check">✅</span>
+        <span>API accessible</span>
+      </div>
+      <div class="status-item">
+        <span class="check">✅</span>
+        <span>Base de données SQLite</span>
+      </div>
+      <div class="status-item">
+        <span class="check">✅</span>
+        <span>Responsive design</span>
+      </div>
+    </div>
+
+    <div class="api-status" id="apiStatus">
+      Vérification de l'API...
+    </div>
+
+    <button onclick="window.location.href='/api/health'">
+      Voir l'état de l'API
+    </button>
+  </div>
+
+  <script>
+    async function checkAPI() {
+      try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        document.getElementById('apiStatus').textContent =
+          `API Status: ${response.status} OK\n${JSON.stringify(data, null, 2)}`;
+      } catch (e) {
+        document.getElementById('apiStatus').textContent = `Erreur: ${e.message}`;
+      }
+    }
+    checkAPI();
+  </script>
+</body>
+</html>
