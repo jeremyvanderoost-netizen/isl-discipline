@@ -18,6 +18,9 @@ COPY . .
 # Build le backend et frontend
 RUN npm run build
 
+# Copier les fichiers du frontend dans le répertoire du backend
+RUN cp -r /app/frontend/dist /app/backend/dist/public
+
 # Nettoyer et installer seulement les prod deps pour le runtime
 WORKDIR /app/backend
 RUN rm -rf node_modules && npm install --omit=dev
