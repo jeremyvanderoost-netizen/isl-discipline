@@ -26,5 +26,8 @@ RUN mkdir -p /app/backend/public && \
 WORKDIR /app/backend
 RUN rm -rf node_modules && npm install --omit=dev
 
+# Créer les répertoires nécessaires pour les données
+RUN mkdir -p /app/backend/data
+
 # Lancer le backend sur 0.0.0.0:3000
 CMD ["npm", "start"]
