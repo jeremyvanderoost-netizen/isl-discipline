@@ -20,7 +20,9 @@ RUN npm run build
 
 # Copier les fichiers compilés du frontend vers le répertoire public du backend
 RUN mkdir -p /app/backend/public && \
-    cp -r /app/frontend/dist/* /app/backend/public/
+    if [ -d /app/frontend/dist ] && [ "$(ls -A /app/frontend/dist)" ]; then \
+      cp -r /app/frontend/dist/* /app/backend/public/; \
+    fi
 
 # Nettoyer et installer seulement les prod deps pour le runtime
 WORKDIR /app/backend
