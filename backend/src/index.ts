@@ -40,15 +40,14 @@ app.use('/api/students-detail', studentsDetailRouter);
 app.use('/api/export', exportPdfRouter);
 
 // Servir le frontend
-const frontendPath = process.env.NODE_ENV === 'production'
-  ? path.join(process.cwd(), 'frontend', 'dist')
-  : path.join(__dirname, '../../frontend/dist');
+const publicPath = path.join(__dirname, 'public');
+console.log('Serving static files from:', publicPath);
 
-app.use(express.static(frontendPath));
+app.use(express.static(publicPath));
 
 // Fallback pour SPA: servir index.html pour les routes non-API
 app.get('*', (_req, res) => {
-  const indexPath = path.join(frontendPath, 'index.html');
+  const indexPath = path.join(publicPath, 'index.html');
   res.sendFile(indexPath, (err) => {
     if (err) {
       console.error(`Failed to serve ${indexPath}:`, err);
