@@ -1,3 +1,13 @@
+export function getDateKeyInTimezone(dateInput: string | Date, timeZone: string): string {
+  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date);
+}
+
 export function getTodayRangeUTC(timeZone: string, now: Date = new Date()): { start: string; end: string } {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone,

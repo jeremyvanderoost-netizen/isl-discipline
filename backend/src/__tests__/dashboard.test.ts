@@ -76,3 +76,27 @@ describe('GET /api/dashboard/today', () => {
     expect(item.class_name).toBe('TestClass-Dashboard');
   });
 });
+
+describe('GET /api/dashboard/history', () => {
+  it('regroupe tous les événements et punitions par jour, du plus récent au plus ancien', async () => {
+    const res = await request(app).get('/api/dashboard/history');
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBeGreaterThanOrEqual(2);
+
+    const dates = res.body.map((day: any) => day.date);
+    const sorted = [...dates].sort().reverse();
+    expect(dates).toEqual(sorted);
+
+    const oldDay = res.body.find((day: any) => day.date === '2000-01-01');
+    expect(oldDay).toBeDefined();
+    const oldNames = oldDay.items.map((i: any) => i.first_name);
+    expect(oldNames).toContain('Eva');
+    expect(oldNames).toContain('Finn');
+  });
+
+  it('ne fait apparaître un jour qu\'une seule fois même avec plusieurs éléments', async () => {
+    const res = await request(app).get('/api/dashboard/history');
+    const oldDayEntries = res.body.filter((day: any) => day.date === '2000-01-01');
+    expect(oldDayEntries).toHaveLength(1);
+  });
+});

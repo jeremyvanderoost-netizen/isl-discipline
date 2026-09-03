@@ -1,41 +1,9 @@
 import { useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
-
-interface TodayItem {
-  class_name: string;
-  first_name: string;
-  last_name: string;
-  date: string;
-  kind: 'event' | 'punition';
-  type?: 'retard' | 'matériel_manquant' | 'travail_non_fait';
-  subcategory?: string | null;
-  comment?: string | null;
-  reason?: string | null;
-}
-
-const EVENT_LABELS: Record<string, string> = {
-  retard: 'Retard',
-  matériel_manquant: 'Matériel manquant',
-  travail_non_fait: 'Travail non fait'
-};
-
-const SUBCATEGORY_LABELS: Record<string, string> = {
-  préparation: 'Préparation à domicile',
-  document_oublié: 'Document oublié',
-  évaluation_non_signée: 'Évaluation non signée'
-};
-
-function getLabel(item: TodayItem): string {
-  if (item.kind === 'punition') {
-    return `Punition${item.reason ? ' - ' + item.reason : ''}`;
-  }
-  const base = EVENT_LABELS[item.type || ''] || item.type || '';
-  const sub = item.subcategory ? SUBCATEGORY_LABELS[item.subcategory] || item.subcategory : '';
-  return sub ? `${base} (${sub})` : base;
-}
+import { DisciplineItem, getDisciplineLabel } from '../utils/disciplineLabels';
 
 export default function TodayDashboard() {
-  const { data: items, request } = useApi<TodayItem[]>();
+  const { data: items, request } = useApi<DisciplineItem[]>();
 
   useEffect(() => {
     request('/api/dashboard/today', { method: 'GET' });
@@ -68,7 +36,7 @@ export default function TodayDashboard() {
                   <td className="px-4 py-2 font-semibold text-indigo-600 whitespace-nowrap">{item.class_name}</td>
                   <td className="px-4 py-2 text-gray-800 whitespace-nowrap">{item.last_name}</td>
                   <td className="px-4 py-2 text-gray-800 whitespace-nowrap">{item.first_name}</td>
-                  <td className="px-4 py-2 text-gray-700">{getLabel(item)}</td>
+                  <td className="px-4 py-2 text-gray-700">{getDisciplineLabel(item)}</td>
                 </tr>
               ))}
             </tbody>
