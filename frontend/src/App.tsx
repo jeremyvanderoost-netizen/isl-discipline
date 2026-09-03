@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import ClassList from './components/ClassList'
 import ClassDetail from './components/ClassDetail'
+import TodayDashboard from './components/TodayDashboard'
 import { useApi } from './hooks/useApi'
 import { Class } from './types'
 import logoInstitut from './assets/logo-institut-saint-louis.png'
@@ -35,7 +36,10 @@ export default function App() {
       </header>
 
       {screen === 'classes' && (
-        <ClassList onSelectClass={handleSelectClass} />
+        <>
+          <TodayDashboard />
+          <ClassList onSelectClass={handleSelectClass} />
+        </>
       )}
       {screen === 'class-detail' && selectedClass && (
         <ClassDetail
