@@ -96,13 +96,13 @@ export default function StudentDetail({ studentId, onBack }: StudentDetailProps)
 
   const handleCancelPunition = async (punitionId: number) => {
     if (cancellingRef.current) return;
-    if (!confirm('Annuler cette retenue ? Cette action est définitive.')) return;
+    if (!confirm('Annuler cette punition ? Cette action est définitive.')) return;
     cancellingRef.current = true;
 
     try {
       const response = await fetch(`/api/punitions/${punitionId}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Erreur lors de l\'annulation');
-      setSuccessMessage('✓ Retenue annulée');
+      setSuccessMessage('✓ Punition annulée');
       loadStudent();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Erreur lors de l\'annulation');
@@ -187,13 +187,13 @@ export default function StudentDetail({ studentId, onBack }: StudentDetailProps)
           {/* Statistiques */}
           <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600">Total des retenues</p>
+              <p className="text-sm text-gray-600">Total des punitions</p>
               <p className="text-2xl font-bold text-gray-800">{punishment_count}</p>
             </div>
             {active_alert && (
               <div className="bg-red-50 border border-red-200 rounded p-3">
                 <p className="text-sm font-semibold text-red-700">ALERTE ACTIVE</p>
-                <p className="text-sm text-red-600">{active_alert.punishment_count_at_trigger} retenues</p>
+                <p className="text-sm text-red-600">{active_alert.punishment_count_at_trigger} punitions</p>
               </div>
             )}
           </div>
@@ -289,7 +289,7 @@ export default function StudentDetail({ studentId, onBack }: StudentDetailProps)
               {resolved_alerts.map(alert => (
                 <div key={alert.id} className="border-l-4 border-orange-400 pl-4 py-2">
                   <p className="text-sm text-gray-600">
-                    <span className="font-semibold">{formatDate(alert.triggered_at)}</span> - {alert.punishment_count_at_trigger} retenues
+                    <span className="font-semibold">{formatDate(alert.triggered_at)}</span> - {alert.punishment_count_at_trigger} punitions
                   </p>
                   <p className="text-sm text-gray-600">
                     Traitée le {formatDate(alert.resolved_at)}
@@ -323,7 +323,7 @@ export default function StudentDetail({ studentId, onBack }: StudentDetailProps)
                   type: 'punition' as const,
                   id: p.id as number,
                   date: new Date(p.detention_date),
-                  title: `Retenue${p.reason ? ' - ' + p.reason : ''}`,
+                  title: `Punition${p.reason ? ' - ' + p.reason : ''}`,
                   comment: null as string | null,
                   detention_date: p.detention_date as string,
                   reason: (p.reason ?? null) as string | null
@@ -366,7 +366,7 @@ export default function StudentDetail({ studentId, onBack }: StudentDetailProps)
         <EditPunitionDialog
           punition={editingPunition}
           onClose={() => setEditingPunition(null)}
-          onSaved={() => { setSuccessMessage('✓ Retenue modifiée'); loadStudent(); }}
+          onSaved={() => { setSuccessMessage('✓ Punition modifiée'); loadStudent(); }}
         />
       )}
     </div>

@@ -33,11 +33,11 @@ export default function PunitionActionBar({ selectedStudentIds, onSuccess }: Pun
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Erreur lors de l\'ajout de la retenue');
+        throw new Error(data.error || 'Erreur lors de l\'ajout de la punition');
       }
 
       const selectedCount = selectedStudentIds.length;
-      const message = `${selectedCount} retenue${selectedCount > 1 ? 's' : ''} ajoutée${selectedCount > 1 ? 's' : ''}`;
+      const message = `${selectedCount} punition${selectedCount > 1 ? 's' : ''} ajoutée${selectedCount > 1 ? 's' : ''}`;
       onSuccess(message);
       setIsOpen(false);
       setDetentionDate('');
@@ -54,7 +54,7 @@ export default function PunitionActionBar({ selectedStudentIds, onSuccess }: Pun
   }
 
   return (
-    <div className="fixed bottom-20 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
+    <div className="bg-white border-t border-gray-200">
       <div className="px-4 py-4">
         {!isOpen ? (
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -67,12 +67,12 @@ export default function PunitionActionBar({ selectedStudentIds, onSuccess }: Pun
               onClick={() => setIsOpen(true)}
               className="px-4 py-2 sm:py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors font-semibold text-sm sm:text-base min-h-[44px] flex items-center justify-center"
             >
-              ➕ Donner une retenue
+              ➕ Donner une punition
             </button>
           </div>
         ) : (
           <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-            <h3 className="font-bold text-base sm:text-lg">Ajouter une retenue</h3>
+            <h3 className="font-bold text-base sm:text-lg">Ajouter une punition</h3>
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-xs sm:text-sm">

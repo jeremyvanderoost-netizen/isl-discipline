@@ -36,11 +36,11 @@ export default function AlertDialog({ alert, studentName, onResolve, onClose }: 
 
         <div className="p-4 space-y-3">
           <p className="text-gray-700">
-            <span className="font-semibold">Nombre de retenues :</span>{' '}
+            <span className="font-semibold">Nombre de punitions :</span>{' '}
             {alert.punishment_count_at_trigger}
           </p>
           <p className="text-gray-600 text-sm">
-            Cet élève a atteint {alert.punishment_count_at_trigger} retenues.
+            Cet élève a atteint {alert.punishment_count_at_trigger} punitions.
             Les parents doivent être contactés.
           </p>
 

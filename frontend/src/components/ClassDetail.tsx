@@ -223,17 +223,17 @@ export default function ClassDetail({ classId, className, onBack }: ClassDetailP
       </div>
 
       {/* Action Bars */}
-      {students && students.length > 0 && (
-        <>
-          <ActionBar
-            selectedStudentIds={Array.from(selectedStudents)}
-            onSuccess={handleActionSuccess}
-          />
+      {students && students.length > 0 && selectedStudents.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 shadow-lg max-h-[85vh] overflow-y-auto">
           <PunitionActionBar
             selectedStudentIds={Array.from(selectedStudents)}
             onSuccess={handleActionSuccess}
           />
-        </>
+          <ActionBar
+            selectedStudentIds={Array.from(selectedStudents)}
+            onSuccess={handleActionSuccess}
+          />
+        </div>
       )}
 
       {/* Alert Dialog */}

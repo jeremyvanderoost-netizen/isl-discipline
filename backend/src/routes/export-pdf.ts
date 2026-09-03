@@ -78,10 +78,10 @@ router.get('/student/:studentId/pdf', async (req: Request, res: Response) => {
 
     // Statistiques
     doc.fontSize(14).font('Helvetica-Bold').text('Statistiques');
-    doc.fontSize(11).font('Helvetica').text(`Total des retenues: ${punitionCount.count}`);
+    doc.fontSize(11).font('Helvetica').text(`Total des punitions: ${punitionCount.count}`);
 
     if (activeAlert) {
-      doc.fontSize(10).fillColor('red').text(`ALERTE ACTIVE: ${activeAlert.punishment_count_at_trigger} retenues`).fillColor('black');
+      doc.fontSize(10).fillColor('red').text(`ALERTE ACTIVE: ${activeAlert.punishment_count_at_trigger} punitions`).fillColor('black');
     }
     doc.moveDown();
 
@@ -97,7 +97,7 @@ router.get('/student/:studentId/pdf', async (req: Request, res: Response) => {
       })),
       ...punitions.map(p => ({
         date: new Date(p.detention_date),
-        text: `Retenue: ${p.reason || '(sans motif)'}`,
+        text: `Punition: ${p.reason || '(sans motif)'}`,
         details: ''
       }))
     ].sort((a, b) => b.date.getTime() - a.date.getTime());

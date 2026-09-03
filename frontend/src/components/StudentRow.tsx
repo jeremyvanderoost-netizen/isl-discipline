@@ -37,7 +37,7 @@ export default function StudentRow({ student, stats, isSelected, onToggle, onVie
                 ? 'bg-red-100 text-red-700'
                 : 'bg-orange-100 text-orange-700'
             }`}>
-              {punishmentCount} retenue{punishmentCount > 1 ? 's' : ''}
+              {punishmentCount} punition{punishmentCount > 1 ? 's' : ''}
             </span>
           )}
         </div>

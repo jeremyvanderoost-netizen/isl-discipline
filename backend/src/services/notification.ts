@@ -70,14 +70,14 @@ export async function sendPunitionNotification(
     minute: '2-digit'
   }).format(detention);
 
-  const subject = `Retenue - ${lastName} ${firstName}`;
+  const subject = `Punition - ${lastName} ${firstName}`;
   const htmlContent = `
-    <h2>Notification de Retenue</h2>
+    <h2>Notification de Punition</h2>
     <p><strong>Eleve:</strong> ${lastName} ${firstName}</p>
     <p><strong>Classe:</strong> ${className}</p>
     <p><strong>Date et heure:</strong> ${detentionStr}</p>
     ${reason ? `<p><strong>Motif:</strong> ${reason}</p>` : ''}
-    <p><em>La retenue vient d'avoir lieu.</em></p>
+    <p><em>La punition vient d'avoir lieu.</em></p>
   `;
 
   try {
