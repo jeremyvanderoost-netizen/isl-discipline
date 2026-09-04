@@ -180,7 +180,7 @@ export default function ClassDetail({ classId, className, onBack }: ClassDetailP
       )}
 
       {/* Content */}
-      <div className="px-4 py-4 sm:py-6">
+      <div className={`px-4 py-4 sm:py-6 ${selectedStudents.size > 0 ? 'pb-[85vh]' : ''}`}>
         {loading && (
           <p className="text-center text-gray-600">Chargement des élèves...</p>
         )}
