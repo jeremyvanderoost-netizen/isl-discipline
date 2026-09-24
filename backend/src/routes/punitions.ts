@@ -148,7 +148,6 @@ router.delete('/:id', async (req: Request, res: Response) => {
 
 router.post('/batch', async (req: Request, res: Response) => {
   try {
-    const db = getDatabase();
     const { student_ids, detention_date, reason } = req.body as CreatePunitionsRequest;
 
     if (!student_ids || !Array.isArray(student_ids) || student_ids.length === 0 || !detention_date) {
@@ -156,7 +155,7 @@ router.post('/batch', async (req: Request, res: Response) => {
       return;
     }
 
-    const results = await runInTransaction(async () => {
+    const results = await runInTransaction(async (db) => {
       const created = [];
       const now = new Date().toISOString();
 

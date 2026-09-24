@@ -15,7 +15,6 @@ import statsRouter from './routes/stats.js';
 import studentsDetailRouter from './routes/students-detail.js';
 import exportPdfRouter from './routes/export-pdf.js';
 import dashboardRouter from './routes/dashboard.js';
-import adminExportRouter from './routes/admin-export.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -42,7 +41,6 @@ app.use('/api/stats', statsRouter);
 app.use('/api/students-detail', studentsDetailRouter);
 app.use('/api/export', exportPdfRouter);
 app.use('/api/dashboard', dashboardRouter);
-app.use('/api/admin', adminExportRouter);
 
 // Servir le frontend - Try multiple paths
 const publicPaths = [

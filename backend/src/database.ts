@@ -1,31 +1,70 @@
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import { createClient, Client } from '@libsql/client';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+interface DbWrapper {
+  get: (sql: string, params?: unknown[]) => Promise<any>;
+  all: (sql: string, params?: unknown[]) => Promise<any[]>;
+  run: (sql: string, params?: unknown[]) => Promise<{ lastID: number; changes: number }>;
+  exec: (sql: string) => Promise<void>;
+  close: () => Promise<void>;
+}
 
-const DATABASE_PATH = process.env.DATABASE_PATH || path.join(__dirname, '..', 'data', 'app.db');
+let client: Client | null = null;
+let db: DbWrapper | null = null;
 
-let db: any = null;
+function resolveDatabaseUrl(): string {
+  if (process.env.TURSO_DATABASE_URL) {
+    return process.env.TURSO_DATABASE_URL;
+  }
+
+  const localPath = process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'app.db');
+  if (localPath === ':memory:') {
+    return ':memory:';
+  }
+  return `file:${localPath}`;
+}
 
 async function initializeDatabase(force = false) {
   if (db && !force) return db;
 
-  if (db && force) {
+  if (client && force) {
     try {
-      await db.close();
+      client.close();
     } catch (_err) {
       // ignore
     }
   }
 
-  db = null; // Reset db before opening
-  db = await open({
-    filename: DATABASE_PATH,
-    driver: sqlite3.Database
+  client = createClient({
+    url: resolveDatabaseUrl(),
+    authToken: process.env.TURSO_AUTH_TOKEN
   });
+
+  const activeClient = client;
+
+  db = {
+    async get(sql, params = []) {
+      const result = await activeClient.execute({ sql, args: params as any });
+      return result.rows[0] as any;
+    },
+    async all(sql, params = []) {
+      const result = await activeClient.execute({ sql, args: params as any });
+      return result.rows as any[];
+    },
+    async run(sql, params = []) {
+      const result = await activeClient.execute({ sql, args: params as any });
+      return {
+        lastID: Number(result.lastInsertRowid ?? 0),
+        changes: result.rowsAffected
+      };
+    },
+    async exec(sql) {
+      await activeClient.executeMultiple(sql);
+    },
+    async close() {
+      activeClient.close();
+    }
+  };
 
   await db.exec('PRAGMA foreign_keys = ON');
   await runMigrations();
@@ -145,23 +184,53 @@ export function getDatabase() {
   return db;
 }
 
-// Le driver sqlite3 partage une seule connexion : deux transactions ne peuvent
-// pas être ouvertes en même temps dessus (SQLITE_ERROR: cannot start a
-// transaction within a transaction). On sérialise donc tous les appels
-// transactionnels sur une file d'attente pour garantir qu'une transaction
-// termine (COMMIT ou ROLLBACK) avant que la suivante démarre.
+// Turso/libSQL ne permet pas d'ouvrir une transaction via de simples appels
+// BEGIN/COMMIT séparés sur le client partagé (chaque execute() n'est pas
+// garanti de partager le même contexte) : il faut utiliser son API de
+// transaction dédiée (client.transaction()). On sérialise en plus tous les
+// appels transactionnels sur une file d'attente, une seule transaction à la
+// fois, par prudence.
 let transactionQueue: Promise<unknown> = Promise.resolve();
 
-export function runInTransaction<T>(fn: () => Promise<T>): Promise<T> {
+export function runInTransaction<T>(fn: (db: DbWrapper) => Promise<T>): Promise<T> {
   const run = async (): Promise<T> => {
-    const database = getDatabase();
-    await database.exec('BEGIN TRANSACTION');
+    if (!client) throw new Error('Database not initialized');
+    const tx = await client.transaction('write');
+
+    const txDb: DbWrapper = {
+      async get(sql, params = []) {
+        const result = await tx.execute({ sql, args: params as any });
+        return result.rows[0] as any;
+      },
+      async all(sql, params = []) {
+        const result = await tx.execute({ sql, args: params as any });
+        return result.rows as any[];
+      },
+      async run(sql, params = []) {
+        const result = await tx.execute({ sql, args: params as any });
+        return {
+          lastID: Number(result.lastInsertRowid ?? 0),
+          changes: result.rowsAffected
+        };
+      },
+      async exec(sql) {
+        await tx.execute(sql);
+      },
+      async close() {
+        // no-op: la fermeture est gérée par commit()/rollback()
+      }
+    };
+
     try {
-      const result = await fn();
-      await database.exec('COMMIT');
+      const result = await fn(txDb);
+      await tx.commit();
       return result;
     } catch (error) {
-      await database.exec('ROLLBACK');
+      try {
+        await tx.rollback();
+      } catch (_rollbackError) {
+        // la transaction peut déjà être terminée (ex: erreur réseau) ; ignorer
+      }
       throw error;
     }
   };
